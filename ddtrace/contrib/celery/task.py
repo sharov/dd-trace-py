@@ -80,6 +80,8 @@ def _task_run(pin, func, task, args, kwargs):
     with pin.tracer.trace(TASK_RUN, service=pin.service, resource=task.name) as span:
         # Set meta data from task request
         span.set_metas(meta_from_context(task.request))
+        # Set task name tag
+        span.set_tag('task-name', task.name)
 
         # Call original `run` function
         return func(*args, **kwargs)
@@ -97,6 +99,8 @@ def _task_apply(pin, func, task, args, kwargs):
         if res.traceback:
             span.error = 1
             span.set_meta(errors.STACK, res.traceback)
+        # Set task name tag
+        span.set_tag('task-name', task.name)
         return res
 
 
@@ -119,4 +123,6 @@ def _task_apply_async(pin, func, task, args, kwargs):
         # DEV: Calling `res.traceback` or `res.state` will make an
         #   API call to the backend for the properties
         span.set_meta('id', res.id)
+        # Set task name tag
+        span.set_tag('task-name', task.name)
         return res
